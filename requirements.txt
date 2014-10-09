@@ -1,0 +1,6 @@
+tornado
+redis
+pymongo
+sh
+requests
+bae_log

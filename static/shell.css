@@ -1,0 +1,16 @@
+* {
+    font-family: 'Monaco', monospace;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    margin: 10px;
+}
+
+input {
+    border: none;
+    outline: none;
+    width: 90%;
+}
