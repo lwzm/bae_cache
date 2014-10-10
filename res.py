@@ -6,6 +6,7 @@ from __future__ import print_function, unicode_literals
 import datetime
 import logging
 
+import pymongo
 import redis
 
 import etc
@@ -16,31 +17,28 @@ ID = "-".join(map(str, [
     now.hour, now.minute, now.second, now.microsecond,
 ]))
 
-R = redis.StrictRedis("redis.duapp.com", 80, password="-".join([
-    etc.api_key, etc.secret_key, etc.redis,
-]))
-
 try:
     import bae
 except ImportError:
     R = redis.StrictRedis()  # at localhost
-
-
-try:
-    import pymongo
-    mongo_conn = pymongo.Connection(host="mongo.duapp.com", port=8908)
-    M = mongo_conn[etc.mongo]
+else:
+    M = pymongo.Connection(host="mongo.duapp.com", port=8908)[etc.mongo]
     M.authenticate(etc.api_key, etc.secret_key)
-except:
-    pass
+    R = redis.StrictRedis("redis.duapp.com", 80, password="-".join([
+        etc.api_key, etc.secret_key, etc.redis,
+    ]))
+
+
+
 
 try:
     import bae_log.handlers
+except ImportError:
+    pass
+else:
     logging.getLogger().addHandler(
         bae_log.handlers.BaeLogHandler(etc.api_key, etc.secret_key)
     )
-except:
-    pass
 
 
 if __name__ == "__main__":

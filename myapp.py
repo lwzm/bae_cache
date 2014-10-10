@@ -102,18 +102,21 @@ class SyncHandler(BaseHandler):
         persist(path, self.request.body)
 
 
-class CacheTemporaryHandler(BaseHandler):
+def cache_it(path):
+    response = tornado.httpclient.HTTPClient().fetch("http://" + path)
+    data = response.body  # do not care status code
+    persist("caches/{0}".format(path), data)
+    return data
+
+class CachesHandler(BaseHandler):
     def get(self, path):
-        prefix = "http://tmp.qww.pw/"
-        response = tornado.httpclient.HTTPClient().fetch(prefix + path)
-        persist("tmp/" + path, response.body)  # do not care status code
-        self.finish(response.body)  # should use finish, not write, why?
+        self.finish(cache_it(path))  # should use finish, not write, why?
 
 
 app = tornado.web.Application([
     (r"/shell", ShellHandler),
     (r"/sync/(.*)", SyncHandler),
-    (r"/tmp/(.*)", CacheTemporaryHandler),
+    (r"/caches/(.*)", CachesHandler),
     (r"/(.*)", MainHandler),
 ], static_path="static", template_path="template", debug=debug)
 
