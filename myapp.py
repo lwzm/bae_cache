@@ -10,6 +10,7 @@ import io
 import os
 import os.path
 import sys
+import json
 import time
 
 import tornado.httpclient
@@ -22,13 +23,21 @@ import res
 
 debug = True
 
-
 def persist(path, data):
     dir, _ = os.path.split(path)
     if dir and not os.path.isdir(dir):
         os.makedirs(dir)
     with open(path, "wb") as f:
         f.write(data)
+
+
+def cache_it(path):
+    try:
+        data = tornado.httpclient.HTTPClient().fetch("http://" + path).body
+    except Exception:
+        data = b''  # do not care status code
+    persist(path, data)
+    return data
 
 
 class Shell(code.InteractiveInterpreter):
@@ -63,16 +72,10 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self, path):
-        r = res.R
         environ = tornado.wsgi.WSGIContainer.environ(self.request)
-        r.sadd("keys", res.ID)
-        r.hset(res.ID, time.time(), environ.get("HTTP_USER_AGENT"))
         self.set_header("Content-type", "text/plain")
-        self.write("\n".join([
-            self.request.remote_ip,
-            res.ID,
-            str(r.smembers("keys")),
-        ]))
+        self.write(json.dumps(environ, indent=4, separators=(',', ': '),
+                              default=str, sort_keys=True))
 
 
 class ShellHandler(BaseHandler):
@@ -93,7 +96,7 @@ class ShellHandler(BaseHandler):
 
 class SyncHandler(BaseHandler):
     def get(self, path):
-        "TODO"
+        self.write(path)
 
     def post(self, path):
         """
@@ -102,36 +105,31 @@ class SyncHandler(BaseHandler):
         persist(path, self.request.body)
 
 
-def cache_it(path):
-    response = tornado.httpclient.HTTPClient().fetch("http://" + path)
-    data = response.body  # do not care status code
-    persist("caches/{0}".format(path), data)
-    return data
-
-class CachesHandler(BaseHandler):
-    def get(self, path):
-        self.finish(cache_it(path))  # should use finish, not write, why?
+class CacheHandler(BaseHandler):
+    def get(self, host, path):
+        self.set_header("Content-Type", "application/octet-stream")
+        self.finish(cache_it("{0}/{1}".format(host, path)))  # should use finish, not write, why?
 
 
 app = tornado.web.Application([
     (r"/shell", ShellHandler),
-    (r"/sync/(.*)", SyncHandler),
-    (r"/caches/(.*)", CachesHandler),
+    (r"/sync/(.+)", SyncHandler),
+    (r"/(.+)/(.+[^/])", CacheHandler),
     (r"/(.*)", MainHandler),
 ], static_path="static", template_path="template", debug=debug)
 
 wsgi_app = tornado.wsgi.WSGIAdapter(app)
 
-tornado.options.options.log_file_prefix = b"../log/myapp.log"  # should be str in py2, :(
-tornado.log.enable_pretty_logging()
-
 
 if __name__ == "__main__":
-    port = 1024
-    app.listen(port)
+    tornado.options.define("port", 1024, type=int)
+    tornado.options.parse_command_line()
+    app.listen(tornado.options.options.port)
     tornado.ioloop.IOLoop.instance().start()
-    import wsgiref.simple_server
-    #wsgiref.simple_server.make_server("0.0.0.0", port, wsgi_app).serve_forever()
+    #import wsgiref.simple_server
+    #wsgiref.simple_server.make_server("0.0.0.0", 1024, wsgi_app).serve_forever()
 else:
+    tornado.options.options.log_file_prefix = b"../log/myapp.log"  # should be str in py2, :(
+    tornado.log.enable_pretty_logging()
     import bae
     application = bae.create_wsgi_app(wsgi_app, debug)
