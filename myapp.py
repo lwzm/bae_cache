@@ -13,6 +13,7 @@ import sys
 import json
 import time
 
+import sh
 import tornado.httpclient
 import tornado.log
 import tornado.options
@@ -72,15 +73,25 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self, path):
-        environ = tornado.wsgi.WSGIContainer.environ(self.request)
-        self.set_header("Content-type", "text/plain")
-        self.write(json.dumps(environ, indent=4, separators=(',', ': '),
-                              default=str, sort_keys=True))
+        if not path:
+            path = "."
+        if os.path.isdir(path):
+            self.render("dir.html", ls=[i + "/" * os.path.isdir(os.path.join(path, i))
+                                        for i in os.listdir(path)])
+        else:
+            environ = tornado.wsgi.WSGIContainer.environ(self.request)
+            self.set_header("Content-type", "text/plain")
+            self.write(json.dumps(environ, indent=4, separators=(',', ': '),
+                                  default=str, sort_keys=True))
 
 
 class ShellHandler(BaseHandler):
     shell = Shell()
-    shell.push("import sh, res, sys, os")
+    shell.push("import " + ",".join(set(map(
+        lambda s: s.split(".")[0], filter(
+            lambda s: not s.startswith("_"), sys.modules)))))
+    shell.push("""def q(s): c, _, a = s.partition(" "); return getattr(sh, c)(*a.split())""")
+    shell.push("")
 
     def get(self):
         self.render("shell.html")
@@ -114,7 +125,7 @@ class CacheHandler(BaseHandler):
 app = tornado.web.Application([
     (r"/shell", ShellHandler),
     (r"/sync/(.+)", SyncHandler),
-    (r"/(.+)/(.+[^/])", CacheHandler),
+    (r"/([^.]+\..*[^.])/(.+[^/])", CacheHandler),
     (r"/(.*)", MainHandler),
 ], static_path="static", template_path="template", debug=debug)
 

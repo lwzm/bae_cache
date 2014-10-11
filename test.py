@@ -10,4 +10,4 @@ def app(environ, start_response):
 
 
 import bae
-application = bae.create_wsgi_app(wsgi_app, True)
+application = bae.create_wsgi_app(app, True)
