@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -f root log
+ln -s / root
+ln -s ../log l && mv l log

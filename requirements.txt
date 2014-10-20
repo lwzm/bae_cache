@@ -4,3 +4,4 @@ pymongo
 sh
 requests
 bae_log
+bae_image

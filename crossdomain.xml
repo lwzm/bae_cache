@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <cross-domain-policy>
-    <allow-access-from domain="*" to-ports="*" secure="false"/>
+    <allow-access-from domain="qww.pw"/>
 </cross-domain-policy>

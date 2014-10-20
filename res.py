@@ -14,31 +14,25 @@ import etc
 now = datetime.datetime.now()
 
 ID = "-".join(map(str, [
-    now.hour, now.minute, now.second, now.microsecond,
+    now.month, now.day, now.hour, now.minute, now.second, now.microsecond,
 ]))
 
 try:
-    import bae
+    import bae_image
+    import bae_log.handlers
 except ImportError:
     R = redis.StrictRedis()  # at localhost
 else:
-    M = pymongo.Connection(host="mongo.duapp.com", port=8908)[etc.mongo]
+    M = pymongo.MongoClient("mongo.duapp.com", 8908)[etc.mongo]
     M.authenticate(etc.api_key, etc.secret_key)
     R = redis.StrictRedis("redis.duapp.com", 80, password="-".join([
         etc.api_key, etc.secret_key, etc.redis,
     ]))
-
-
-
-
-try:
-    import bae_log.handlers
-except ImportError:
-    pass
-else:
     logging.getLogger().addHandler(
         bae_log.handlers.BaeLogHandler(etc.api_key, etc.secret_key)
     )
+    def img():
+        return bae_image.BaeImage(etc.api_key, etc.secret_key, "image.duapp.com")
 
 
 if __name__ == "__main__":
