@@ -16,6 +16,7 @@ import time
 import traceback
 
 import sh
+import shlex
 import tornado.httpclient
 import tornado.log
 import tornado.options
@@ -94,7 +95,7 @@ class ShellHandler(BaseHandler):
     shell.push("import " + ",".join(set(map(
         lambda s: s.split(".")[0], filter(
             lambda s: not s.startswith("_"), sys.modules)))))
-    shell.push("""def q(s): c, _, a = s.partition(" "); return getattr(sh, c)(*map(sh.glob, a.strip().split()))""")
+    shell.push("""def q(s): c, _, a = s.partition(" "); return getattr(sh, c)(*map(sh.glob, shlex.split(a)))""")
     shell.push("")
 
     def get(self):
