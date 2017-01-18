@@ -2,21 +2,22 @@
 # -*- coding:utf-8 -*-
 # http://developer.baidu.com/wiki/index.php?title=docs/cplat/rt/python
 
-from __future__ import print_function, unicode_literals
+from __future__ import division, print_function, unicode_literals
 
 import base64
 import code
 import collections
-import logging
 import io
+import logging
 import os
 import os.path
+import shlex
 import sys
 import time
 import traceback
 
+import requests
 import sh
-import shlex
 import tornado.httpclient
 import tornado.log
 import tornado.options

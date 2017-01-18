@@ -1,8 +1,12 @@
 * {
-    font-family: 'Monaco', monospace;
+    font-family: "Monaco", monospace;
     font-size: 14px;
     margin: 0;
     padding: 0;
+}
+
+pre {
+    word-wrap: break-word;
 }
 
 body {
