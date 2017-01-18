@@ -13,17 +13,17 @@ import tornado.log
 import tornado.options
 
 
-def bae_init(basename):
+def bae_init():
     fn = "../log/start_stop.log"
     start = arrow.now()
 
     with open(fn, "a") as f:
-        print("start", os.getpid(), basename, start, sep="\t", file=f)
+        print("start", os.getpid(), start, sep="\t", file=f)
 
     def exit():
         stop = arrow.now()
         with open(fn, "a") as f:
-            print("stop", os.getpid(), basename, stop, stop - start, sep="\t", file=f)
+            print("stop", os.getpid(), stop, stop - start, sep="\t", file=f)
 
     atexit.register(exit)
 
@@ -55,3 +55,7 @@ def remove_all(path):
 def to_json(obj):
     return json.dumps(obj, indent=4, separators=(',', ': '),
                       default=str, sort_keys=True)
+
+
+# only once
+bae_init()

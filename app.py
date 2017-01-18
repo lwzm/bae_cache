@@ -71,6 +71,5 @@ if __name__ == "__main__":
     app.listen(tornado.options.options.port)
     tornado.ioloop.IOLoop.instance().start()
 else:  # BAE
-    util.bae_init(os.path.basename(__file__))
     import bae
     application = bae.create_wsgi_app(wsgi_app)

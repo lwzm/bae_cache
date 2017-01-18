@@ -29,6 +29,5 @@ if __name__ == "__main__":
     #wsgiref.simple_server.make_server("0.0.0.0", 1024, wsgi_app).serve_forever()
 
 else:  # BAE
-    util.bae_init(os.path.basename(__file__))
     import bae
     application = bae.create_wsgi_app(wsgi_app)
