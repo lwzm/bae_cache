@@ -15,6 +15,7 @@ import urllib
 import arrow
 import pony
 import redis
+import tailer
 import requests
 import tornado.log
 import tornado.options
@@ -154,6 +155,12 @@ def to_json(obj):
                       default=str, sort_keys=True)
 
 
+def view_log(name, n=50):
+    with open("../log/{}.log".format(name)) as f:
+        lines = tailer.tail(f, n)
+    return lines
+
+    
 # only once
 try:
     import bae

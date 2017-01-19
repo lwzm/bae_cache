@@ -43,14 +43,32 @@ class UploadHandler(BaseHandler):
 
 
 class CacheHandler(BaseHandler):
+    @tornado.web.removeslash
     def get(self, path):
         data = util.get_path_data(path)
         self.set_header("Content-Type", "application/octet-stream")
         self.finish(data)
 
 
+class LogHandler(BaseHandler):
+    def get(self, name):
+        if name:
+            n = int(self.get_argument("n", 30))
+            self.set_header("Content-Type", "text/plain")
+            self.write(b'\n'.join(util.view_log(name, n)))
+        else:
+            self.set_header("Content-Type", "text/html")
+            logs = os.listdir("../log")
+            self.write("<!DOCTYPE html>")
+            for i in logs:
+                self.write("<p><a href=/log/{} target=_blank>{}</a></p>".format(i[:-4], i))
+            
+        
+
+
 app = tornado.web.Application([
     (r"/upload/(.+)", UploadHandler),
+    (r"/log/(.*)", LogHandler),
     (r"/(.+)", CacheHandler),
 ])
 

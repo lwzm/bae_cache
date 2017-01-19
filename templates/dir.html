@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+{# vim:se filetype=html.tornadotmpl: #}
+
+<html>
+<head>
+<title><code>{{ path }}</code></title>
+
+<style>
+a {
+    text-decoration: none;
+}
+</style>
+
+</head>
+
+
+<body>
+<h1><code>{{ path }}</code></h1>
+<hr>
+
+<pre>
+<a href="../">../</a>
+
+{% for name in lst %}
+<a href="{{ name }}">{{ name }}</a>
+{% end %}
+
+</pre>
+
+<hr>
+</body>
+</html>

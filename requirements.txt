@@ -4,6 +4,7 @@ pony
 redis
 requests
 sh
+tailer
 tornado
 
 --extra-index-url https://pypi.python.org/pypi
