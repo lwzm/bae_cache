@@ -1,8 +1,5 @@
 #!/usr/bin/env python2
 # -*- coding:utf-8 -*-
-# http://developer.baidu.com/wiki/index.php?title=docs/cplat/rt/python
-
-from __future__ import division, print_function, unicode_literals
 
 import os
 
@@ -20,17 +17,20 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class DirectoryHandler(BaseHandler):
-    def get(self, path):
+    def get(self, path="."):
         dirs, files = [], []
+        if isinstance(path, unicode):
+            path = path.encode("utf-8")
         for i in os.listdir(path):
             if os.path.isdir(os.path.join(path, i)):
-                dirs.append(i + "/")
+                dirs.append(i + '/')
             else:
                 files.append(i)
         lst = sorted(dirs) + sorted(files)
         self.render("dir.html", path=path, lst=lst)
 
 app = tornado.web.Application([
+        (r"/", DirectoryHandler),
         (r"/(.+)/", DirectoryHandler),
     ],
     static_path="static",
