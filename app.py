@@ -18,7 +18,6 @@ import util
         
 class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
-        self.set_header("Content-Type", "application/octet-stream")
         self.set_header("Access-Control-Allow-Credentials", "true")
         self.set_header("Access-Control-Allow-Origin", "*")
 
@@ -44,16 +43,9 @@ class UploadHandler(BaseHandler):
 
 
 class CacheHandler(BaseHandler):
-    session = requests.Session()
-
-    def get(self, host_and_path):
-        resp = self.session.get("http://" + host_and_path)
-        if resp.status_code >= 400:
-            raise tornado.web.HTTPError(resp.status_code)
-
-        data = resp.content
-        util.persist(host_and_path, data)
-        self.set_header("Content-Type", resp.headers.get("Content-Type", "application/octet-stream"))
+    def get(self, path):
+        data = util.get_path_data(path)
+        self.set_header("Content-Type", "application/octet-stream")
         self.finish(data)
 
 

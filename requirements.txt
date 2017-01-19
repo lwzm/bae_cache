@@ -1,7 +1,9 @@
-arrow>=0
-redis>=2
-requests>=2
-sh>=1
-tornado>=4
+arrow
+pymysql
+pony
+redis
+requests
+sh
+tornado
 
 --extra-index-url https://pypi.python.org/pypi

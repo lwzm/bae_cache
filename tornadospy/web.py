@@ -64,7 +64,7 @@ class BaseHandler(tornado.web.RequestHandler):
     @property
     def body_s(self):
         if not hasattr(self, "_body_s"):
-            self._body_s = self.request.body.decode()
+            self._body_s = self.request.body.decode("utf-8")
         return self._body_s
 
     @property
@@ -77,7 +77,7 @@ class BaseHandler(tornado.web.RequestHandler):
     @property
     def json(self):
         if not hasattr(self, "_json"):
-            self._json = json.loads(self.request.body.decode())
+            self._json = json.loads(self.body_s)
         return self._json
 
 
@@ -107,7 +107,7 @@ class ObjectHandler(BaseHandler):
             l = dir(v)
         else:
             v = None
-            l = sorted(sys.modules)
+            l = sorted(i for i in sys.modules if "." not in i)
         self.render("object.html", s=s, v=v, l=l)
 
     def post(self):
