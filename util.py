@@ -108,7 +108,6 @@ def get_path_data_from_redis(path):
 
     
 def persist(path, data):
-    path = urllib.unquote(path)
     persist_to_local(path, data)
     persist_to_mysql(path, data)
 

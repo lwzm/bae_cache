@@ -1,10 +1,11 @@
 #!/usr/bin/env python2
 # -*- coding:utf-8 -*-
-# http://developer.baidu.com/wiki/index.php?title=docs/cplat/rt/python
 
 from __future__ import division, print_function, unicode_literals
 
+import os
 import os.path
+import urllib
 
 import requests
 import tornado.log
@@ -34,17 +35,23 @@ class UploadHandler(BaseHandler):
         """
         curl --data-binary @dump.rdb 'http://host/sync/backup/redis_db.bak'
         """
-        util.persist(path, self.request.body)
+        path = urllib.unquote(path.encode("utf-8"))
+        if path.endswith("/"):
+            os.makedirs(path)
+        else:
+            util.persist(path, self.request.body)
     
     put = post
     
     def delete(self, path):
+        path = urllib.unquote(path.encode("utf-8"))
         util.remove_all(path)
 
 
 class CacheHandler(BaseHandler):
-    @tornado.web.removeslash
+    #@tornado.web.removeslash
     def get(self, path):
+        path = urllib.unquote(path.encode("utf-8"))
         data = util.get_path_data(path)
         self.set_header("Content-Type", "application/octet-stream")
         self.finish(data)

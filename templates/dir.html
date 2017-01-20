@@ -4,6 +4,7 @@
 <html>
 <head>
 <title>{{ path }}</title>
+<link href="{{ static_url("dropzone.min.css") }}" rel="stylesheet">
 
 <style>
 a {
@@ -20,11 +21,44 @@ a {
 
 <pre>
 <a href="../">../</a>
-{% for name in lst %}
-<a href="{{ name }}">{{ name }}</a>
+{% for name in lst %} <a href="{{ name }}">{{ name }}</a>  {{ " " * (30 - len(name)) }} <a href="#">x</a>
 {% end %}
 </pre>
 
+
+<button id="newDirectory">NEW</button>
+
 <hr>
+
+<form class="dropzone" action=".">
+</form>
+
+<script src="{{ static_url("dropzone.min.js") }}"></script>
+<script src="{{ static_url("zepto.min.js") }}"></script>
+
+<script>
+var reload = () => location.reload()
+
+$("#newDirectory").on("click", function(e) {
+    var dir = prompt("New Directory")
+    if (dir) {
+        $.ajax({
+            url: "/upload" + location.pathname + dir + "/",
+            type: "POST",
+            success: reload,
+        })
+    }
+})
+
+$("pre a[href='#']").on("click", function(e) {
+    $x = $(e.target)
+    url = "/upload" + location.pathname + $x.prev().text()
+    $.ajax({
+        url: url,
+        type: "DELETE",
+        success: reload,
+    })
+})
+</script>
 </body>
 </html>
