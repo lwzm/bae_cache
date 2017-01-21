@@ -28,18 +28,18 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class DirectoryHandler(BaseHandler):
     def get(self, path="."):
-        path = urllib.unquote(utf8(path))
         download = self.get_argument("dl", None)
         if download:
             cwd = os.getcwd()
             try:
-                os.chdir(path)
+                os.chdir(utf8(path))
                 self._download_dir_package(path, download)
             finally:
                 os.chdir(cwd)
             return
                 
         dirs, files = [], []
+        path = utf8(path)
         for i in os.listdir(path):
             p = os.path.join(path, i)
             st = os.stat(p)
@@ -56,7 +56,7 @@ class DirectoryHandler(BaseHandler):
         self.render("dir.html", path=path, lst=lst)
         
     def _download_dir_package(self, path, type):
-        filename = to_unicode(os.path.basename(path)) + "." + type
+        filename = os.path.basename(path) + "." + type
         self.set_header("Content-Type", "application/octet-stream")
         self.set_header("Content-Disposition", "attachment; filename=" + filename)
         f = io.BytesIO()
@@ -75,7 +75,6 @@ class DirectoryHandler(BaseHandler):
     def post(self, path="."):
         if "file" not in self.request.files:
             return
-        path = to_unicode(urllib.unquote(utf8(path)))
         file_obj = self.request.files["file"][0]
         path = os.path.join(path, file_obj["filename"])
         data = file_obj["body"]
@@ -90,7 +89,8 @@ app = tornado.web.Application([
     template_path="templates",
 )
 
-wsgi_app = tornado.wsgi.WSGIAdapter(app)
+from wsgi import WSGIApplication
+application = WSGIApplication(tornado.wsgi.WSGIAdapter(app))
 
 
 if __name__ == "__main__":
@@ -98,6 +98,3 @@ if __name__ == "__main__":
     tornado.options.parse_command_line()
     app.listen(tornado.options.options.port)
     tornado.ioloop.IOLoop.instance().start()
-else:  # BAE
-    import bae
-    application = bae.create_wsgi_app(wsgi_app)

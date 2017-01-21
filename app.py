@@ -37,23 +37,20 @@ class UploadHandler(BaseHandler):
         """
         curl --data-binary @dump.rdb 'http://host/sync/backup/redis_db.bak'
         """
-        path = urllib.unquote(utf8(path))
         if path.endswith("/"):
-            os.makedirs(path)
+            os.makedirs(utf8(path))
         else:
             util.persist(path, self.request.body)
     
     put = post
     
     def delete(self, path):
-        path = urllib.unquote(path.encode("utf-8"))
         util.remove_all(path)
 
 
 class CacheHandler(BaseHandler):
     #@tornado.web.removeslash
     def get(self, path):
-        path = urllib.unquote(utf8(path))
         data = util.get_path_data(path)
         self.set_header("Content-Type", "application/octet-stream")
         self.finish(data)
@@ -74,8 +71,6 @@ class LogHandler(BaseHandler):
             """)
             for i in logs:
                 self.write("<p><a href=/log/{} target=_blank>{}</a></p>".format(i[:-4], i))
-            
-        
 
 
 app = tornado.web.Application([
@@ -84,7 +79,8 @@ app = tornado.web.Application([
     (r"/(.+)", CacheHandler),
 ])
 
-wsgi_app = tornado.wsgi.WSGIAdapter(app)
+from wsgi import WSGIApplication
+application = WSGIApplication(tornado.wsgi.WSGIAdapter(app))
 
 
 if __name__ == "__main__":
@@ -92,6 +88,3 @@ if __name__ == "__main__":
     tornado.options.parse_command_line()
     app.listen(tornado.options.options.port)
     tornado.ioloop.IOLoop.instance().start()
-else:  # BAE
-    import bae
-    application = bae.create_wsgi_app(wsgi_app)

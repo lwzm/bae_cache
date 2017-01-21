@@ -17,7 +17,9 @@ import tornadospy
 
 
 app = tornadospy.make_app()
-wsgi_app = tornado.wsgi.WSGIAdapter(app)
+
+from wsgi import WSGIApplication
+application = WSGIApplication(tornado.wsgi.WSGIAdapter(app))
 
 
 if __name__ == "__main__":
@@ -25,9 +27,3 @@ if __name__ == "__main__":
     tornado.options.parse_command_line()
     app.listen(tornado.options.options.port)
     tornado.ioloop.IOLoop.instance().start()
-    #import wsgiref.simple_server
-    #wsgiref.simple_server.make_server("0.0.0.0", 1024, wsgi_app).serve_forever()
-
-else:  # BAE
-    import bae
-    application = bae.create_wsgi_app(wsgi_app)

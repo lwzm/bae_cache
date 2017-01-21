@@ -1,19 +1,16 @@
-#!/usr/bin/env python2
-# -*- coding:utf-8 -*-
+#-*- coding:utf-8 -*-
 
-import util
-
+import json
 
 def app(environ, start_response):
-    status = "200 OK"
-    headers = [("Content-type",  "application/octet-stream")]
-    if environ["REQUEST_METHOD"] == "GET":
-        body = util.to_json(environ)
-    else:
-        body = environ["wsgi.input"].read(int(environ["CONTENT_LENGTH"]))
+    status = '200 OK'
+    headers = [('Content-type', 'text/plain')]
     start_response(status, headers)
-    return body
+    body = json.dumps(
+        environ, default=str, indent=4, separators=(",", ": "),
+        ensure_ascii=False, sort_keys=True,
+    )
+    return [body]
 
-
-import bae
-application = bae.create_wsgi_app(app, True)
+from wsgi import WSGIApplication
+application = WSGIApplication(app)
