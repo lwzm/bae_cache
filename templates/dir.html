@@ -3,12 +3,16 @@
 
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ path }}</title>
 <link href="{{ static_url("dropzone.min.css") }}" rel="stylesheet">
 
 <style>
-a {
+pre a {
     text-decoration: none;
+}
+pre span:hover {
+    background: gray;
 }
 </style>
 
@@ -16,12 +20,21 @@ a {
 
 
 <body>
-<h1><code>{{ path }}</code></h1>
+<h1>
+<code>{{ path }}</code>
+</h1>
+<h3>
+<code>{{ len(lst) }}</code>
+</h3>
+<h6>
+<a href="?dl=zip">zip</a>
+<a href="?dl=tar">tar</a>
+</h6>
 <hr>
 
 <pre>
 <a href="../">../</a>
-{% for name in lst %} <a href="{{ name }}">{{ name }}</a>  {{ " " * (30 - len(name)) }} <a href="#">x</a>
+{% for name, size in lst %} <span><a href="{{ name }}">{{ name }}</a> {{ size }}   <a href="#">x</a></span>
 {% end %}
 </pre>
 
@@ -51,13 +64,16 @@ $("#newDirectory").on("click", function(e) {
 })
 
 $("pre a[href='#']").on("click", function(e) {
-    $x = $(e.target)
-    url = "/upload" + location.pathname + $x.prev().text()
-    $.ajax({
-        url: url,
-        type: "DELETE",
-        success: reload,
-    })
+    var $x = $(e.target)
+    var name = $x.prev().text()
+    url = "/upload" + location.pathname + name
+    if (confirm(name)) {
+        $.ajax({
+            url: url,
+            type: "DELETE",
+            success: () => $x.parent().remove(),
+        })
+    }
 })
 </script>
 </body>

@@ -14,6 +14,8 @@ import tornado.options
 import tornado.web
 import tornado.wsgi
 
+from tornado.escape import utf8, to_unicode
+
 import util
         
         
@@ -35,7 +37,7 @@ class UploadHandler(BaseHandler):
         """
         curl --data-binary @dump.rdb 'http://host/sync/backup/redis_db.bak'
         """
-        path = urllib.unquote(path.encode("utf-8"))
+        path = urllib.unquote(utf8(path))
         if path.endswith("/"):
             os.makedirs(path)
         else:
@@ -51,7 +53,7 @@ class UploadHandler(BaseHandler):
 class CacheHandler(BaseHandler):
     #@tornado.web.removeslash
     def get(self, path):
-        path = urllib.unquote(path.encode("utf-8"))
+        path = urllib.unquote(utf8(path))
         data = util.get_path_data(path)
         self.set_header("Content-Type", "application/octet-stream")
         self.finish(data)
@@ -66,7 +68,10 @@ class LogHandler(BaseHandler):
         else:
             self.set_header("Content-Type", "text/html")
             logs = os.listdir("../log")
-            self.write("<!DOCTYPE html>")
+            self.write("""
+            <!DOCTYPE html>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            """)
             for i in logs:
                 self.write("<p><a href=/log/{} target=_blank>{}</a></p>".format(i[:-4], i))
             

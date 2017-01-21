@@ -22,6 +22,7 @@ import tornado.options
 
 from pony import orm
 from pony.orm import Database, PrimaryKey, Required, Optional
+from tornado.escape import utf8, to_unicode
 
 
 AK = "6618acb85fd85fe7ee98e086ecad7744"
@@ -85,8 +86,7 @@ def get_path_data(path):
 
 
 def get_path_data_from_mysql(path):
-    if not isinstance(path, unicode):
-        path = path.decode("utf-8")
+    path = to_unicode(path)
     data = None
     with orm.db_session:
         try:
@@ -97,6 +97,7 @@ def get_path_data_from_mysql(path):
 
     
 def get_path_data_from_redis(path):
+    path = utf8(path)
     n = redis_cli.llen(path)
     if not n:
         return
@@ -113,8 +114,7 @@ def persist(path, data):
 
         
 def persist_to_local(path, data):
-    if isinstance(path, unicode):
-        path = path.encode("utf-8")
+    path = utf8(path)
     dir, _ = os.path.split(path)
     if dir and not os.path.isdir(dir):
         os.makedirs(dir)
@@ -123,8 +123,7 @@ def persist_to_local(path, data):
 
 
 def persist_to_mysql(path, data):
-    if not isinstance(path, unicode):
-        path = path.decode("utf-8")
+    path = to_unicode(path)
     with orm.db_session:
         try:
             f = File[path]
@@ -135,6 +134,7 @@ def persist_to_mysql(path, data):
         
 
 def persist_to_redis(path, data):
+    path = utf8(path)
     step = 2048 - 256
     redis_cli.delete(path)
     for i in range(0, len(data), step):
@@ -143,6 +143,7 @@ def persist_to_redis(path, data):
         
         
 def remove_all(path):
+    path = utf8(path)
     if os.path.isfile(path):
         os.remove(path)
     elif os.path.isdir(path):
@@ -159,7 +160,14 @@ def view_log(name, n=50):
         lines = tailer.tail(f, n)
     return lines
 
-    
+
+def iter_filenames_in_directory(path):
+    path = utf8(path)
+    for dirpath, dirnames, filenames in os.walk(path):
+        for fn in filenames:
+            yield os.path.join(dirpath, fn)
+            
+
 # only once
 try:
     import bae
@@ -167,36 +175,6 @@ try:
 except ImportError:
     pass
 
-
-def interactive_upload(dir=None):
-    def g_input():
-        input = raw_input
-        while True:
-            try:
-                path = input()
-                yield path
-            except EOFError:
-                break
-
-    def g_walk_dir():
-        for dirpath, dirnames, filenames in os.walk(dir):
-            for fn in filenames:
-                yield os.path.join(dirpath, fn)
-
-    if dir is None:
-        it = g_input()
-    else:
-        it = g_walk_dir()
-
-    ss = requests.Session()
-    for path in it:
-        with open(path, "rb") as f:
-            data = f.read()
-        resp = ss.put(
-            b'http://pycache.duapp.com/upload/' + path, data=data)
-        print(resp.status_code, path, len(data))
-
-
-
+    
 if __name__ == "__main__":
-    interactive_upload(*sys.argv[1:])
+    bae
