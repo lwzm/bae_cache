@@ -3,6 +3,7 @@
 
 from __future__ import division, print_function, unicode_literals
 
+import mimetypes
 import os
 import os.path
 import urllib
@@ -17,8 +18,8 @@ import tornado.wsgi
 from tornado.escape import utf8, to_unicode
 
 import util
-        
-        
+
+
 class BaseHandler(tornado.web.RequestHandler):
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Credentials", "true")
@@ -41,9 +42,9 @@ class UploadHandler(BaseHandler):
             os.makedirs(utf8(path))
         else:
             util.persist(path, self.request.body)
-    
+
     put = post
-    
+
     def delete(self, path):
         util.remove_all(path)
 
@@ -52,7 +53,10 @@ class CacheHandler(BaseHandler):
     #@tornado.web.removeslash
     def get(self, path):
         data = util.get_path_data(path)
-        self.set_header("Content-Type", "application/octet-stream")
+        if data is None:
+            raise tornado.web.HTTPError(404)
+        mime_type, encoding = mimetypes.guess_type(path)
+        self.set_header("Content-Type", mime_type or "application/octet-stream")
         self.finish(data)
 
 

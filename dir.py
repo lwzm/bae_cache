@@ -20,8 +20,8 @@ import tornado.wsgi
 from tornado.escape import utf8, to_unicode
 
 import util
-        
-        
+
+
 class BaseHandler(tornado.web.RequestHandler):
     pass
 
@@ -37,12 +37,15 @@ class DirectoryHandler(BaseHandler):
             finally:
                 os.chdir(cwd)
             return
-                
+
         dirs, files = [], []
         path = utf8(path)
         for i in os.listdir(path):
             p = os.path.join(path, i)
-            st = os.stat(p)
+            try:
+                st = os.stat(p)
+            except OSError:
+                continue
             padding = " " * (30 - len(i))
             if os.path.isdir(p):
                 dirs.append(
@@ -54,7 +57,7 @@ class DirectoryHandler(BaseHandler):
                 )
         lst = sorted(dirs) + sorted(files)
         self.render("dir.html", path=path, lst=lst)
-        
+
     def _download_dir_package(self, path, type):
         filename = os.path.basename(path) + "." + type
         self.set_header("Content-Type", "application/octet-stream")
@@ -64,23 +67,23 @@ class DirectoryHandler(BaseHandler):
             with zipfile.ZipFile(f, "w", zipfile.ZIP_DEFLATED) as zip:
                 for fn in util.iter_filenames_in_directory("."):
                     zip.write(fn)
-        elif type == "tar":        
+        elif type == "tar":
             with tarfile.open(None, "w", f) as tar:
                 for fn in os.listdir("."):
                     tar.add(fn)
         value = f.getvalue()
         f.close()
         self.finish(value)
-            
-    def post(self, path="."):
+
+    def post(self, path=""):
         if "file" not in self.request.files:
             return
         file_obj = self.request.files["file"][0]
         path = os.path.join(path, file_obj["filename"])
         data = file_obj["body"]
         util.persist(path, data)
-        
-        
+
+
 app = tornado.web.Application([
         (r"/", DirectoryHandler),
         (r"/(.+)/", DirectoryHandler),
